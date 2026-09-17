@@ -292,9 +292,15 @@
     且自定义启停动作广播必须走 `isTrustedSender`（34+ 代发 uid == 本应用 / 私有 nonce；nonce 落文件，因为进程被杀后
     小组件点击仍要能用）。外屏与内屏密度/尺寸不同：MainActivity/ConsoleActivity 的 `configChanges` 若缺
     `smallestScreenSize|density`，合盖/展开或被投屏时 Activity 重建、WebView 会话状态丢失。
+    **Flip5 / One UI 6.1 `dumpsys display` 实锤（2026-09-17）**：外屏 = displayId 1、748x720、density 340，flags 含
+    `FLAG_PRESENTATION` + `FLAG_OWN_CONTENT_ONLY` + `FLAG_EXTRA_BUILT_IN_DISPLAY`；**展开态它 state OFF 且不在
+    `DisplayManager.getDisplays()` 里**，合盖后才上线。两条推论：① 不能用「非 presentation」过滤外屏（首版就这么写、会把
+    外屏排掉），只能排 FLAG_PRIVATE 再按物理尺寸挑（同机接的 HDMI 3840x2160 由此排除）；② 小组件/通知里带
+    `setLaunchDisplayId` 的 PendingIntent 是**渲染时**定死目标的——外屏 id 必须进小组件渲染签名、通知在看门狗 tick
+    发现 id 变化时重发，且 PendingIntent requestCode 要掺 displayId（PendingIntentRecord key 不比较 options，
+    同 key 复用旧记录拿不到新目标）。
     锚点：`CoverScreen.kt` / `CoverWidgetProvider.kt` / `CoverEngineControl.kt` / `CoverActivity.kt`、
-    `res/xml/cover_widget_info.xml` + `samsung_cover_widget_info.xml`。**真机（Flip5）验收待做**：模拟器无外屏，
-    只能验小组件在主屏与 `am start --display 1` 语义。
+    `res/xml/cover_widget_info.xml` + `samsung_cover_widget_info.xml`。
 
 
 

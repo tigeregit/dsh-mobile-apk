@@ -23,6 +23,8 @@ class EngineService : Service() {
   private lateinit var engineManager: EngineManager
   private var watchdog: ScheduledExecutorService? = null
   private var nextRestartAllowedAt = 0L
+  /** 上次构建常驻通知时的外屏 displayId（-1 = 尚未构建）；看门狗 tick 比对以重发「面板」动作目标。 */
+  @Volatile private var notifiedCoverId = -1
   private val restartDeadConfirmations = 2
 
   override fun onCreate() {
@@ -130,6 +132,13 @@ class EngineService : Service() {
             // 0.14.0-preview 外屏：看门狗每拍顺带刷新 Flex Window 小组件（渲染签名不变时内部跳过，
             // 无实例时零开销）——合盖不开内屏也能看到「运行中/已停止/异常」翻转。
             CoverWidgetProvider.refreshFromWatchdog(this)
+            // 合盖/展开会让外屏 displayId 上线/下线：通知「面板」动作的投放目标随之重发（同 id 覆盖，不打扰）。
+            if (CoverScreen.coverDisplayId(this) != notifiedCoverId) {
+              try {
+                (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).notify(NOTIFICATION_ID, buildNotification())
+              } catch (_: Throwable) {
+              }
+            }
             when (plan.action) {
               WatchdogV2.TickAction.IDLE -> {
                 nextRestartAllowedAt = 0L
@@ -186,13 +195,8 @@ class EngineService : Service() {
     // 0.14.0-preview 外屏：常驻通知带「重启 / 停止 / 面板」动作——Z Flip 合盖时外屏通知面板即可操作，
     // 不必翻开手机。动作走 CoverWidgetProvider 的受校验广播（nonce/uid），面板投到外屏。
     val coverId = CoverScreen.coverDisplayId(this)
-    val panel = Intent(this, CoverActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    val panelOptions = CoverScreen.launchOptions(coverId)
-    val panelPending = if (panelOptions != null) {
-      PendingIntent.getActivity(this, 3, panel, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE, panelOptions)
-    } else {
-      PendingIntent.getActivity(this, 3, panel, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-    }
+    notifiedCoverId = coverId
+    val panelPending = CoverWidgetProvider.activityPendingIntent(this, CoverActivity::class.java, coverId, 3)
     return NotificationCompat.Builder(this, "engine")
       .setSmallIcon(android.R.drawable.stat_notify_chat)
       .setContentTitle("DeepCode 引擎运行中")

@@ -19,8 +19,11 @@ import android.view.Display
  * 或由本应用自己的小组件按 `ActivityOptions.setLaunchDisplayId(<外屏 id>)` 拉起——三星官方 codelab 的
  * `launchDisplayId = 1` 先例）。本文件只做两件事：**找到外屏**、**把 Intent 投到外屏**；不持任何状态。
  *
- * 外屏判定口径（如实记录，不假设厂商 API）：
- *  - `DisplayManager.getDisplays()` 里 `displayId != DEFAULT_DISPLAY` 且非 presentation/private 标志的物理屏；
+ * 外屏判定口径（Flip5 / One UI 6.1 `dumpsys display` 实测，2026-09-17）：
+ *  - 外屏 = displayId 1，748x720，density 340，flags 含 **FLAG_PRESENTATION**、FLAG_OWN_CONTENT_ONLY、
+ *    FLAG_EXTRA_BUILT_IN_DISPLAY；展开态 state OFF 且**不在** `getDisplays()` 列表里，合盖后才出现。
+ *    所以不能用「非 presentation」过滤（会把外屏本身排除掉），只能排 FLAG_PRIVATE，再按**物理尺寸**挑：
+ *    最长边 ≤ [COVER_MAX_EDGE_PX]（同机接的 HDMI 外接屏 3840x2160 由此排除）。
  *  - 找不到时回落「当前窗口尺寸像外屏」——最长边 ≤ [COVER_MAX_EDGE_PX] 且近似方形（0.8 ≤ w/h ≤ 1.25）——
  *    覆盖 MultiStar 把应用整任务搬到外屏后 `Activity.display` 已是外屏但 id 因 ROM 而异的情形。
  */
@@ -28,22 +31,29 @@ internal object CoverScreen {
 
   private const val TAG = "dsh-cover"
 
-  /** Flip5 外屏 720x748；给 Flip6/7 的 748/更高留余量，但明显排除内屏（1080x2640）。 */
+  /** Flip5 外屏 748x720；给 Flip6/7 的 748/更高留余量，但明显排除内屏（1080x2640）与外接屏。 */
   const val COVER_MAX_EDGE_PX = 1000
 
-  /** 非默认、非投屏（presentation）、非私有的显示器——折叠机外屏满足；无外屏返回 null。 */
+  /** 非默认、非私有、物理尺寸像外屏的显示器（多个命中取 id 最小）；无外屏（或展开态外屏未上线）返回 null。 */
   fun coverDisplay(context: Context): Display? {
     return try {
       val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-      dm.displays.firstOrNull { d ->
-        d.displayId != Display.DEFAULT_DISPLAY &&
-          (d.flags and Display.FLAG_PRESENTATION) == 0 &&
-          (d.flags and Display.FLAG_PRIVATE) == 0
-      }
+      dm.displays
+        .filter { d -> d.displayId != Display.DEFAULT_DISPLAY && (d.flags and Display.FLAG_PRIVATE) == 0 }
+        .filter { d -> physicalMaxEdge(d) <= COVER_MAX_EDGE_PX }
+        .minByOrNull { it.displayId }
     } catch (t: Throwable) {
       Log.w(TAG, "coverDisplay lookup failed: " + t.message)
       null
     }
+  }
+
+  /** 物理分辩率最长边（Display.Mode，API 23+；取不到按 Int.MAX 视为「不像外屏」）。 */
+  private fun physicalMaxEdge(d: Display): Int = try {
+    val m = d.mode
+    maxOf(m.physicalWidth, m.physicalHeight)
+  } catch (_: Throwable) {
+    Int.MAX_VALUE
   }
 
   /** 外屏 displayId；无外屏回落默认屏（调用方直接拿去 setLaunchDisplayId，无需再判空）。 */

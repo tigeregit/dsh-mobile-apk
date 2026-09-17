@@ -151,8 +151,11 @@ class CoverWidgetProvider : AppWidgetProvider() {
         if (snap.serviceAlive) "✓" else "✗",
         if (snap.batteryWhitelisted) "✓" else "✗",
       )
-      // 签名不含延迟毫秒/运行时长秒级抖动（否则每拍都变）：状态 + 分钟级时长 + 保活位。
-      val signature = snap.state.name + "|" + (snap.uptimeMs / 60_000L) + "|" + keepalive + "|" + snap.failureCount
+      // 签名不含延迟毫秒/运行时长秒级抖动（否则每拍都变）：状态 + 分钟级时长 + 保活位 + 外屏 id。
+      // 外屏 id 入签名（Flip5 实测）：展开态 displayId 1 不在 getDisplays() 里，合盖后才上线——按钮的
+      // 投放目标必须随之重渲染，否则合盖后点「控制面板」会开到关着的内屏上。
+      val coverId = CoverScreen.coverDisplayId(context)
+      val signature = snap.state.name + "|" + (snap.uptimeMs / 60_000L) + "|" + keepalive + "|" + snap.failureCount + "|d" + coverId
       if (!force && signature == lastSignature) return
       lastSignature = signature
 
@@ -207,15 +210,20 @@ class CoverWidgetProvider : AppWidgetProvider() {
       )
     }
 
-    /** 把 Activity 投到 [displayId]（外屏）的 PendingIntent；默认屏时不带 options。 */
-    private fun activityPendingIntent(context: Context, cls: Class<*>, displayId: Int, requestCode: Int): PendingIntent {
+    /**
+     * 把 Activity 投到 [displayId]（外屏）的 PendingIntent；默认屏时不带 options。
+     * requestCode 掺入 displayId：PendingIntentRecord 的 key 不比较 options，同 key 复用旧记录会让
+     * 「合盖后重渲染」拿回的仍是不带外屏目标的旧 PendingIntent。
+     */
+    fun activityPendingIntent(context: Context, cls: Class<*>, displayId: Int, requestCode: Int): PendingIntent {
       val intent = Intent(context, cls).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
       val options = CoverScreen.launchOptions(displayId)
+      val code = requestCode * 100 + (displayId.coerceIn(0, 99))
       return if (options != null) {
-        PendingIntent.getActivity(context, requestCode, intent, flags, options)
+        PendingIntent.getActivity(context, code, intent, flags, options)
       } else {
-        PendingIntent.getActivity(context, requestCode, intent, flags)
+        PendingIntent.getActivity(context, code, intent, flags)
       }
     }
 
