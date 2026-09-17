@@ -54,11 +54,16 @@ jobs:
         uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
 
-      - name: 构建插件（6 个含 build 脚本的；dsh-host-web-compat 用已提交 lib）
+      # 插件集必须与 scripts/plugin-dirs.json 的 dirs 同步（dsh-host-web-compat 用已提交 lib，其余都要 build）。
+      # 2026-09-17 Flip5 真机实锤：0.14.0-preview 把 dsh-android-browser / dsh-android-vdisplay 加进了注入集与
+      # profile 装配，本清单没跟上 → 快照里两包只有 src 没有 lib → 引擎 boot 直接
+      # ERR_MODULE_NOT_FOUND（…/@dsh-android/dsh-android-vdisplay/lib/index.js），check-inject-completeness 比的是
+      # 「成员 == 源包」抓不到。顺序：dsh-shell-termux 必须最先（linux-env 经 file:../../dsh-shell-termux 引它的 lib/types）。
+      - name: 构建插件（9 个含 build 脚本的；dsh-host-web-compat 用已提交 lib）
         shell: bash
         run: |
           set -e
-          for d in plugins/dsh-android-bridge plugins/dsh-android-manage plugins/dsh-android-linux-env plugins/dsh-android-file-open plugins/dsh-model-capability dsh-shell-termux dsh-client-ui-responsive; do
+          for d in dsh-shell-termux plugins/dsh-android-bridge plugins/dsh-android-manage plugins/dsh-android-linux-env plugins/dsh-android-file-open plugins/dsh-model-capability plugins/dsh-android-browser plugins/dsh-android-vdisplay dsh-client-ui-responsive; do
             echo "== npm build $d =="
             (cd "$d" && npm install --no-audit --no-fund && npm run build)
           done
