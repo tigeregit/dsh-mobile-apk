@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Z Flip 外屏（Flex Window）小组件元数据。三星要求（developer.samsung.com/galaxy-z/flex_window.html）：
+     minWidth/minHeight 取整屏组件推荐值、resizeMode 含 horizontal|vertical、widgetCategory 含 keyguard；
+     配套 samsung_cover_widget_info.xml 的 display="sub_screen" 才会出现在「设置 → 外屏 → 小组件」列表。
+     home_screen 一并声明：非折叠机也能把它当普通桌面组件用（状态 + 启停）。 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:initialLayout="@layout/cover_widget"
+  android:minWidth="339dp"
+  android:minHeight="352dp"
+  android:minResizeWidth="250dp"
+  android:minResizeHeight="180dp"
+  android:targetCellWidth="4"
+  android:targetCellHeight="3"
+  android:resizeMode="horizontal|vertical"
+  android:widgetCategory="keyguard|home_screen"
+  android:updatePeriodMillis="1800000"
+  android:description="@string/cover_widget_description"
+  android:previewLayout="@layout/cover_widget" />

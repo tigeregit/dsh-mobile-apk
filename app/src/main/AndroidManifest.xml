@@ -103,10 +103,13 @@
       </intent-filter>
     </receiver>
 
+    <!-- 0.14.0-preview Z Flip 外屏：configChanges 加 smallestScreenSize|density——合盖/展开或被 MultiStar /
+         小组件投到外屏时窗口尺寸与密度都会变，缺这两项 Activity 会被重建、WebView 会话状态丢失。 -->
     <activity
       android:name=".MainActivity"
       android:exported="true"
-      android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+      android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|keyboardHidden|uiMode"
+      android:resizeableActivity="true"
       android:windowSoftInputMode="adjustResize">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
@@ -137,8 +140,39 @@
     <activity
       android:name=".ConsoleActivity"
       android:exported="false"
-      android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+      android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|keyboardHidden|uiMode"
+      android:resizeableActivity="true"
       android:windowSoftInputMode="adjustResize" />
+
+    <!-- 0.14.0-preview Z Flip 外屏控制面板（720x748 外屏形态的原生设置/状态页；也可在内屏用）。
+         只由本应用拉起（小组件 / 常驻通知 / adb 调试），不导出。 -->
+    <activity
+      android:name=".CoverActivity"
+      android:exported="false"
+      android:label="@string/cover_panel_title"
+      android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|keyboardHidden|uiMode"
+      android:resizeableActivity="true"
+      android:launchMode="singleTask"
+      android:taskAffinity="com.dsharnessmobile.shell.cover" />
+
+    <!-- 0.14.0-preview Z Flip 外屏（Flex Window）小组件：android.appwidget.provider（三星要求 keyguard 类别 +
+         双向 resize）+ com.samsung.android.appwidget.provider（display="sub_screen"）。
+         exported=true 是 AppWidgetProvider 的系统约束（APPWIDGET_* 为受保护广播）；自定义启停动作经
+         CoverWidgetProvider.isTrustedSender 校验（34+ 代发 uid == 本应用 / 私有 nonce），见 check-manifest-hardening 白名单。 -->
+    <receiver
+      android:name=".CoverWidgetProvider"
+      android:exported="true"
+      android:label="@string/cover_widget_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/cover_widget_info" />
+      <meta-data
+        android:name="com.samsung.android.appwidget.provider"
+        android:resource="@xml/samsung_cover_widget_info" />
+    </receiver>
 
     <!-- 外部阅读器打开文件（issue #52）：FileProvider 向 ACTION_VIEW 目标
          授予临时读权限（应用私有目录与公共目录均需 content:// 才能跨应用）。 -->

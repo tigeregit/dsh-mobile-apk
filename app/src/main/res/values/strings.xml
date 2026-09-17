@@ -33,5 +33,25 @@
   <!-- 0.13.5 W4：设备控制无障碍服务（语义控制面） -->
   <string name="a11y_service_label">DSH 设备控制</string>
   <string name="a11y_service_summary">让 AI 助手以语义方式读取界面并操作控件</string>
+  <!-- 0.14.0-preview：Z Flip 外屏（Flex Window）小组件 + 外屏控制面板 -->
+  <string name="cover_widget_label">DeepCode 引擎（外屏）</string>
+  <string name="cover_widget_description">引擎运行状态与启停 / 重启 / 外屏控制面板（Galaxy Z Flip 外屏可用）</string>
+  <string name="cover_status_dot">引擎状态</string>
+  <string name="cover_state_unknown">状态读取中…</string>
+  <string name="cover_state_running">引擎运行中</string>
+  <string name="cover_state_starting">引擎启动中</string>
+  <string name="cover_state_stopped">引擎已停止</string>
+  <string name="cover_state_refreshing">运行时写入中</string>
+  <string name="cover_state_error">引擎异常</string>
+  <string name="cover_state_not_ready">运行时待解压</string>
+  <string name="cover_version_placeholder">v–</string>
+  <string name="cover_detail_placeholder">–</string>
+  <string name="cover_action_start">启动</string>
+  <string name="cover_action_stop">停止</string>
+  <string name="cover_action_restart">重启</string>
+  <string name="cover_action_panel">控制面板</string>
+  <string name="cover_action_full_ui">完整界面</string>
+  <string name="cover_panel_title">外屏控制面板</string>
+  <string name="cover_keepalive_fmt">保活：前台服务 %1$s · 电池白名单 %2$s</string>
   <string name="a11y_service_description">开启后，AI 助手可以读取当前界面的控件（文本/描述/位置）并执行点击、输入、滚动等操作。仅在你主动开启时生效，关闭后立即失效；同时要求会话处于「完全访问」档位。</string>
 </resources>

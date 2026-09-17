@@ -115,6 +115,9 @@ const EXPORTED_ALLOW = new Map([
   ['.DeviceControlService', { reason: '无障碍服务，android:permission=BIND_ACCESSIBILITY_SERVICE', guard: 'permission' }],
   ['.AdbKeyboardReceiver', { reason: 'ADB 输入广播，源码 isTrustedSender 校验', guard: 'source-check' }],
   ['.BootReceiver', { reason: 'BOOT_COMPLETED（受保护系统广播）', guard: 'permission' }],
+  // 0.14.0-preview Z Flip 外屏小组件：AppWidgetProvider 必须 exported=true（APPWIDGET_* 为受保护系统广播）；
+  // 自定义启停动作（COVER_*）由源码 isTrustedSender 校验（34+ 代发 uid == 本应用 uid / 私有 nonce extra）。
+  ['.CoverWidgetProvider', { reason: 'Flex Window 小组件 receiver；APPWIDGET_* 受保护 + 自定义动作 isTrustedSender 校验', guard: 'source-check' }],
 ])
 const PROTECTED_SYSTEM_ACTIONS = new Set([
   'android.intent.action.BOOT_COMPLETED',

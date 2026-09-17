@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 三星 Flex Window 专有元数据：display="sub_screen" = 允许放到 Z Flip 外屏。
+     privacyWidget="true"：锁屏态也展示内容（状态/启停对本机所有者本就可见，不含机密）。 -->
+<samsung-appwidget-provider
+  display="sub_screen"
+  privacyWidget="true" />

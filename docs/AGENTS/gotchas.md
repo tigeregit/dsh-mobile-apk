@@ -280,6 +280,22 @@
     并在「被拒非空」或「产出为空」时 `exit 1`。防线 = `scripts/check-build-chain-abort.mjs`（静态逐处断言 +
     `--self-test` 抽真实尾部块用合成状态驱动：被拒→非 0 / 全产出→0 / 零产出→非 0 / 去掉守卫→0 承重反证）。
 
+95. **Z Flip 外屏（Flex Window）不是「多一块屏」而是三星白名单面（0.14.0-preview 外屏支持登记，2026-09-17）**：
+    三星只让 Labs 名单里的少数应用在外屏跑 Activity；第三方想上外屏只有两条正路——① **小组件**：
+    `android.appwidget.provider` 必须同时满足 `resizeMode="horizontal|vertical"` + `widgetCategory` 含 `keyguard` +
+    整屏尺寸（339x352dp），并再挂一份 `com.samsung.android.appwidget.provider` → `<samsung-appwidget-provider display="sub_screen"/>`
+    （任一缺失 = 不出现在「设置 → 外屏 → 小组件」里，且**无任何报错**）；② **Activity 上外屏**：小组件 / 通知的
+    PendingIntent 带 `ActivityOptions.setLaunchDisplayId(<外屏 id>)`（三星 codelab 的 `launchDisplayId = 1` 先例），
+    或用户装 Good Lock MultiStar「Launcher Widget」放行任意应用。系统拒绝投放（SecurityException）时必须回落普通
+    startActivity（`CoverScreen.startOnDisplay`），否则外屏上点了没反应。
+    伴生雷：AppWidgetProvider 必须 `exported="true"`——本仓 `check-manifest-hardening` 的白名单要登记（guard=source-check），
+    且自定义启停动作广播必须走 `isTrustedSender`（34+ 代发 uid == 本应用 / 私有 nonce；nonce 落文件，因为进程被杀后
+    小组件点击仍要能用）。外屏与内屏密度/尺寸不同：MainActivity/ConsoleActivity 的 `configChanges` 若缺
+    `smallestScreenSize|density`，合盖/展开或被投屏时 Activity 重建、WebView 会话状态丢失。
+    锚点：`CoverScreen.kt` / `CoverWidgetProvider.kt` / `CoverEngineControl.kt` / `CoverActivity.kt`、
+    `res/xml/cover_widget_info.xml` + `samsung_cover_widget_info.xml`。**真机（Flip5）验收待做**：模拟器无外屏，
+    只能验小组件在主屏与 `am start --display 1` 语义。
+
 
 
 

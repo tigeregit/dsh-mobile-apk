@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 状态点：白底圆形，运行时经 RemoteViews.setInt(setColorFilter) 着色（ok/warn/danger）。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+  <solid android:color="#FFFFFFFF" />
+  <size android:width="12dp" android:height="12dp" />
+</shape>

@@ -127,6 +127,9 @@ class EngineService : Service() {
               undoReady = { UndoGate.onProbeFailure(this, WatchdogV2.effectiveFailureCount()) },
             )
             for (line in plan.logs) LogCollector.log("dsh-watchdog", line)
+            // 0.14.0-preview 外屏：看门狗每拍顺带刷新 Flex Window 小组件（渲染签名不变时内部跳过，
+            // 无实例时零开销）——合盖不开内屏也能看到「运行中/已停止/异常」翻转。
+            CoverWidgetProvider.refreshFromWatchdog(this)
             when (plan.action) {
               WatchdogV2.TickAction.IDLE -> {
                 nextRestartAllowedAt = 0L
@@ -180,12 +183,25 @@ class EngineService : Service() {
       this, 0, Intent(this, MainActivity::class.java),
       PendingIntent.FLAG_IMMUTABLE,
     )
+    // 0.14.0-preview 外屏：常驻通知带「重启 / 停止 / 面板」动作——Z Flip 合盖时外屏通知面板即可操作，
+    // 不必翻开手机。动作走 CoverWidgetProvider 的受校验广播（nonce/uid），面板投到外屏。
+    val coverId = CoverScreen.coverDisplayId(this)
+    val panel = Intent(this, CoverActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    val panelOptions = CoverScreen.launchOptions(coverId)
+    val panelPending = if (panelOptions != null) {
+      PendingIntent.getActivity(this, 3, panel, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE, panelOptions)
+    } else {
+      PendingIntent.getActivity(this, 3, panel, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
     return NotificationCompat.Builder(this, "engine")
       .setSmallIcon(android.R.drawable.stat_notify_chat)
       .setContentTitle("DeepCode 引擎运行中")
       .setContentText("DeepCode 正在后台工作")
       .setContentIntent(pending)
       .setOngoing(true)
+      .addAction(0, getString(R.string.cover_action_restart), CoverWidgetProvider.actionPendingIntent(this, CoverWidgetProvider.ACTION_RESTART, coverId))
+      .addAction(0, getString(R.string.cover_action_stop), CoverWidgetProvider.actionPendingIntent(this, CoverWidgetProvider.ACTION_STOP, coverId))
+      .addAction(0, getString(R.string.cover_action_panel), panelPending)
       .build()
   }
 

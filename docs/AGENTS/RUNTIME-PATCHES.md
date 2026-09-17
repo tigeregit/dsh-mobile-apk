@@ -138,6 +138,18 @@ Copy-Item (Join-Path $dst 'index.js') 'dsh-mobile-apk\app\src\main\assets\patche
 `perf-patch-reload-N1` 归一化。归档后 `check-perf-instrumentation.mjs --require` 复核产物内该键值
 （P-AC-01：发布档 startup / dev 档 live）。
 
+### 7.3 追上游 0.1.5-rc.2 的资产核对（2026-09-17）
+
+engine-overlay 从 0.1.5-rc.1 平推到 0.1.5-rc.2（npm dist-tag `latest`；上游 release notes 只有反馈弹窗与交付卡片排版两项 UI 改动）。
+按 §2 第 2 条逐文件核对两个在册 asset 对应的上游包：
+
+- `dsh-attachment-local@0.1.5-rc.2` 与 `dsh-session-persistence-jsonl@0.1.5-rc.2` 的 `lib/index.js`
+  在施加同源 engine 补丁（F2 / F5+F7）后与 rc.1 同版产物**字节一致**（sha256 前缀 `FE8F2674…` / `9DFF8EEA…`），
+  即这两个包在 rc.1→rc.2 之间**未变**；启动时整文件覆盖的 asset 在 rc.2 树上仍然是「同版包 + 补丁」，不重出。
+- 9 项 scope=engine 补丁在 rc.2 树上全部锚点命中（`apply-patches --scope engine` 9/9），
+  `boot-pending.test.mjs` 5/5、`pi-toolcall.test.mjs` 8/8、`atomic-stale-lock.test.mjs` 全绿。
+- 门禁 `check-runtime-assets.mjs --require` 仍以 registry marker 比对快照/asset，rc.2 快照构建后需按 §7.2 复跑。
+
 ## 8. 0.13.7fx-1：web-frontend-index.html 退役（2026-09-11）
 
 **实测（从 0.13.7 发布快照 out/v0.13.7/snapshot-x86_64.tar.xz 抽出对比）**：引擎自带的

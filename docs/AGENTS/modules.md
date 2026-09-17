@@ -150,6 +150,22 @@
 相关壳侧改动：`AndroidBridge.a11yStatus()/openA11ySettings()/unlockRestrictedSettings()`；`AdbState.unlockRestrictedSettings()`（appops 一键解锁）；`MainActivity.openAccessibilitySettings()`；`EngineManager.snapshotSettingsBackup()`（换树前 settings 备份，issue #126 P1 兜底）。
 能力面/权限面全量参考：`docs/AGENTS/ACCESSIBILITY-API.md`。
 
+## 0.14.0-preview 新增模块（Z Flip 外屏支持，2026-09-17）
+
+用户形态：Galaxy Z Flip5 合盖当 mini 服务器，尽量不开内屏——状态与**全部壳侧设置**都要能在外屏完成；引擎侧设置由
+「完整界面」把 MainActivity 投到同一块外屏（响应式 UI 在 360dp 宽即手机形态）承载。承载面见坑 95。
+
+| 文件 | 职责 | 关键函数 |
+|---|---|---|
+| `CoverScreen.kt`（新） | 外屏发现与投放：非默认/非 presentation/非 private 显示器 = 外屏；尺寸口径回落（最长边 ≤ 1000px 且近方形）；`setLaunchDisplayId` 投放失败回落普通启动 | `coverDisplay()` / `coverDisplayId()` / `isOnCover()` / `launchOptions()` / `startOnDisplay()` / `startOnSameDisplay()` |
+| `CoverEngineControl.kt`（新） | 小组件 / 面板 / 通知动作共用的引擎控制面与状态快照；判定复用既有真源（EngineProbe / userShutdown / snapshotRefreshing / WatchdogV2 计数）；快照未就绪的 start 改投 MainActivity（解压流只在那里） | `sample()`（≤1.6s 阻塞，禁主线程）/ `start(context, displayId)` / `stop()` / `restart()` / `formatDuration()` |
+| `CoverWidgetProvider.kt`（新） | Flex Window 小组件（`res/layout/cover_widget.xml` + `xml/cover_widget_info.xml` + `xml/samsung_cover_widget_info.xml`）：状态点/文案/保活位 + 启停（按当前采样决定语义）/重启/控制面板/完整界面四按钮；看门狗每拍刷新但只在渲染签名变化时推 RemoteViews；导出 receiver 的 `isTrustedSender`（34+ 代发 uid / 私有 nonce 文件） | `refreshAsync()` / `refreshFromWatchdog()` / `actionPendingIntent()`（通知动作共用）/ `isTrustedSender()` / `ensureNonce()` |
+| `CoverActivity.kt`（新） | 外屏控制面板（纯代码 UI，风格对齐 GuideChrome；singleTask + 独立 taskAffinity）：状态卡 3s 采样、启停/重启/完整界面/控制台、保活与权限行（电池白名单 / 所有文件访问 / 无障碍 / 通知 / ADB 状态）、悬浮球 / 沉浸式 / 开发者日志开关（展示值 = 壳侧真源，写后回读）、配置导入导出、检查更新（只查不下载） | `sampleAsync()` / `renderStatus()` / `refreshSettingsRows()` / `onToggle()` / `openFullUi()` |
+
+相关既有文件改动：`EngineService` 看门狗 tick 调 `CoverWidgetProvider.refreshFromWatchdog`；常驻通知加「重启 / 停止 / 面板」
+三个动作（面板投外屏）；`AndroidManifest.xml` 三个 Activity 的 `configChanges` 补 `smallestScreenSize|density` +
+`resizeableActivity="true"`；`scripts/check-manifest-hardening.mjs` 白名单登记 `.CoverWidgetProvider`。
+
 ## 0.14.0-preview 新增模块（通知分级与通知内应答，计划 §6）
 
 | 文件 | 职责 | 关键函数 |
