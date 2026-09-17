@@ -59,7 +59,7 @@
 
 补充：若希望像普通应用那样从外屏启动器打开 DeepCode，可装 Good Lock → MultiStar → I ♥ Galaxy Foldable → Launcher Widget
 （三星放行任意应用上外屏的官方途径）。合盖常驻请把「电池优化白名单」加入（面板第一行），否则 Doze 会限制后台引擎。
-调试：`adb shell am start -n com.dsharnessmobile.shell/.CoverActivity --display 1`（外屏 id 通常为 1）。
+面板同时是第二个启动器图标「外屏控制面板」，可直接钉进 MultiStar 的外屏启动器。调试：`adb shell am start -n com.dsharnessmobile.shell/.CoverActivity --display 1`（Flip5 外屏 id=1，仅合盖时在线）。
 
 ## 下载 / 安装
 

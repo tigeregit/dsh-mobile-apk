@@ -145,15 +145,22 @@
       android:windowSoftInputMode="adjustResize" />
 
     <!-- 0.14.0-preview Z Flip 外屏控制面板（720x748 外屏形态的原生设置/状态页；也可在内屏用）。
-         只由本应用拉起（小组件 / 常驻通知 / adb 调试），不导出。 -->
+         导出为第二个启动器入口「外屏控制面板」：Good Lock MultiStar「Launcher Widget」按启动器条目放行应用上外屏，
+         有独立入口用户才能把面板（而不只是主界面）钉到外屏启动器；adb 调试同理。面板本身无特权面（按钮动作都在进程内，
+         只读壳侧真源），与 MainActivity 同为 user-facing（check-manifest-hardening 白名单）。 -->
     <activity
       android:name=".CoverActivity"
-      android:exported="false"
+      android:exported="true"
       android:label="@string/cover_panel_title"
       android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|keyboardHidden|uiMode"
       android:resizeableActivity="true"
       android:launchMode="singleTask"
-      android:taskAffinity="com.dsharnessmobile.shell.cover" />
+      android:taskAffinity="com.dsharnessmobile.shell.cover">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
 
     <!-- 0.14.0-preview Z Flip 外屏（Flex Window）小组件：android.appwidget.provider（三星要求 keyguard 类别 +
          双向 resize）+ com.samsung.android.appwidget.provider（display="sub_screen"）。

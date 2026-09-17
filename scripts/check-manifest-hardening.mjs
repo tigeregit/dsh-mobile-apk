@@ -118,6 +118,7 @@ const EXPORTED_ALLOW = new Map([
   // 0.14.0-preview Z Flip 外屏小组件：AppWidgetProvider 必须 exported=true（APPWIDGET_* 为受保护系统广播）；
   // 自定义启停动作（COVER_*）由源码 isTrustedSender 校验（34+ 代发 uid == 本应用 uid / 私有 nonce extra）。
   ['.CoverWidgetProvider', { reason: 'Flex Window 小组件 receiver；APPWIDGET_* 受保护 + 自定义动作 isTrustedSender 校验', guard: 'source-check' }],
+  ['.CoverActivity', { reason: '外屏控制面板：第二个启动器入口（MultiStar Launcher Widget 需独立条目才能钉到外屏），无特权面', guard: 'user-facing' }],
 ])
 const PROTECTED_SYSTEM_ACTIONS = new Set([
   'android.intent.action.BOOT_COMPLETED',
