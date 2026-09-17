@@ -65,7 +65,9 @@ jobs:
           set -e
           for d in dsh-shell-termux plugins/dsh-android-bridge plugins/dsh-android-manage plugins/dsh-android-linux-env plugins/dsh-android-file-open plugins/dsh-model-capability plugins/dsh-android-browser plugins/dsh-android-vdisplay dsh-client-ui-responsive; do
             echo "== npm build $d =="
-            (cd "$d" && npm install --no-audit --no-fund && npm run build)
+            # --legacy-peer-deps：dsh-android-vdisplay 无 lockfile，devDeps 只钉 0.1.1-rc.2 的 client-runtime/ui-slots，
+            # 其 peer（dsh-api-remotes 等）不在 devDeps 里 → npm 7+ 严格 peer 解析 ERESOLVE；类型编译不需要这些 peer。
+            (cd "$d" && npm install --no-audit --no-fund --legacy-peer-deps && npm run build)
           done
 
       - name: stage 底座归档（base/ -> .deploy-tmp/<base-dir>/）
